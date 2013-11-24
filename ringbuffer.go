@@ -1,4 +1,4 @@
-// package ringbuffer implements a sequential compact FIFO + LILO
+// package ringbuffer implements a sequential compact FIFO + LILO. Sometimes called a Queue.
 // To Use:  type RingElement thing
 //          var myThing RingElement
 //          rb := RingBuffer.New(40)
@@ -31,9 +31,10 @@ func (e *RingBufferError) Error() string {
 }
 
 // Inspect the internal state of the ring buffer and complain if not ok.
-var invNum int
+var invNum int   // invNum is an error code.
 
-func (b *RingBuffer) invariant() bool {
+// The conditions checked here can best be understood by drawing the obvious diagram of the array.
+func (b *RingBuffer) invariant() bool { // You can remove this function and all ref to it.
 	capacity := cap(b.data)
 	invNum = 0
 	ok := (0 <= b.in) && (b.in < capacity) &&
@@ -42,7 +43,7 @@ func (b *RingBuffer) invariant() bool {
 		(capacity == len(b.data))
 
 	if !ok {
-		invNum = 1
+		invNum = 1 // invariant violation number.
 	} else {
 		if b.out < b.in {
 			ok = b.size == b.in-b.out
@@ -130,5 +131,5 @@ func (b *RingBuffer) Clear() {
 		b.data[i] = 0
 	}
 	b.invariant()
-	// free(b.data)  // unimplemented.
+	// free(b.data)  // unimplemented.  We gots GC, baby.
 }

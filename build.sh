@@ -2,5 +2,5 @@
 # Source me.
 
 function rr () {
-    go install -v ringbuffer
+    go install -v ringbuffer  && go run ringbuffer.go
 }
