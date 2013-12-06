@@ -1,4 +1,4 @@
-// package ringbuffer implements a sequential compact FIFO + LILO. Sometimes called a Queue.
+// package ringbuffer implements a sequential compact FIFO and LILO. Also called a Queue.
 // To Use:  type RingElement thing
 //          var myThing RingElement
 //          rb := RingBuffer.New(40)
@@ -7,18 +7,15 @@
 //          for 0 < rb.Size() {
 //              doSomethingWith(rb.Read())
 //          }
+//          
+//  THIS IS NOT CONCURRENT —— ONE GOROUTINE ONLY. 
 package ringbuffer
-
-import (
-// "fmt"
-// "os"
-)
 
 type RingElement interface{}
 
 type RingBuffer struct {
 	data    []RingElement
-	in, out int // place of next in (Write) and next out (Read).  These are subscripts.
+	in, out int // Place of next in (Write). Place osf next out (Read).  These are subscripts.
 	size    int // Number of items currenly in the ring buffer.
 }
 
@@ -124,10 +121,15 @@ func (b *RingBuffer) Full() bool {
 	return b.size >= cap(b.data)
 }
 
+// Any left to read?
+func (b *RingBuffer) HasAny() bool {
+	return b.size > 0
+}
+
 // Obliterate, Purge, and Remove the contents of the ring buffer.
 func (b *RingBuffer) Clear() {
 	b.in, b.out, b.size = 0, 0, 0
-	for i := 0; i < len(b.data); i++ {
+	for i := 0; i < len(b.data); i++ {  // Remove dangling references to avoid leaks.
 		b.data[i] = 0
 	}
 	b.invariant()

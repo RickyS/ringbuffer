@@ -1,6 +1,5 @@
-#! /bin/bash
-# Source me.
+# Source me.  Bash function.
 
 function rr () {
-    go install -v ringbuffer  && go run ringbuffer.go
+    go install -v ringbuffer  && go run runringbuffer.go
 }

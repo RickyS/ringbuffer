@@ -1,5 +1,6 @@
-//  Code to help exercise the ringbuffer package, a FIFO.
+//  Code to help exercise the ringbuffer package, a FIFO, LILO, and Queue.
 //  Call the ringbuffer routines with well-defined sequences of data so we know what to check for.
+//  All the real code for the ring buffer is in ringbuffer/ringbuffer.go
 package ringbuffer
 
 import (
@@ -8,7 +9,7 @@ import (
 )
 
 // Debuggishness
-// We read and write type DbgRingElement a lot.  And use its integerness as a check of 
+// We read and write type DbgRingElement a lot.  And use its integerness as a check of
 // integrity of the algorithm.
 type DbgRingElement int
 
@@ -18,7 +19,6 @@ var wValue DbgRingElement = 0   // increasing as the test case.
 var Expected DbgRingElement = 0 // wValue supposed to turn into Expected at the other end.
 
 var opVcnt int = 0
-
 
 // ReadV and WriteV are for putting stuff in numeric sequence to check that
 // it comes out in the same numeric sequence.
@@ -41,7 +41,6 @@ func (b *RingBuffer) ReadV() DbgRingElement { // More debuggishness
 	return tmp
 }
 
-
 //  ReadD and WriteD call ringbuffer and make basic checks on each call.
 func (b *RingBuffer) WriteD(datum DbgRingElement) error {
 	f := b.Full()
@@ -63,7 +62,7 @@ func (b *RingBuffer) ReadD() DbgRingElement { // More debuggishness
 	var tmp DbgRingElement
 	var ok bool
 	if 0 < bufLen {
-		tmp, ok = (b.Read()).(DbgRingElement)  // Type assertion.
+		tmp, ok = (b.Read()).(DbgRingElement) // Type assertion.
 		if !ok {
 			fmt.Printf("ReadD Type Failure, size %4d\n", bufLen)
 			b.Dump()
@@ -89,17 +88,17 @@ func (b *RingBuffer) Dump() {
 func (b *RingBuffer) internalDump(msg string) {
 	fmt.Printf("\t(In %3d)   (Out %3d)   (Siz %3d)   (len %3d)   (cap %3d) %s [%d]\n",
 		b.in, b.out, b.size, len(b.data), cap(b.data), msg, invNum)
-		// invNum is an error code from the ringbuffer.invariant internal routine.
-		// Must be zero.
+	// invNum is an error code from the ringbuffer.invariant internal routine.
+	// Must be zero.
 
-	i, o, s := b.in, b.out, b.size  // Save internal ringbuffer state
+	i, o, s := b.in, b.out, b.size // Save internal ringbuffer state
 	fmt.Printf(" ")
 	for i := 0; 0 < b.Leng(); i++ { // Display the contents.
 		fmt.Printf(" %5d ", b.Read())
 	}
 	fmt.Println()
 
-	b.in, b.out, b.size = i, o, s  // Restore internal state.
+	b.in, b.out, b.size = i, o, s // Restore internal state.
 	bOut := b.out
 	for j := 0; j < b.Leng(); j++ { // Display the associate subscripts.
 		ixThis := fmt.Sprintf("[%d]", bOut)
