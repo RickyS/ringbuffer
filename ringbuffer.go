@@ -133,5 +133,5 @@ func (b *RingBuffer) Clear() {
 		b.data[i] = nil
 	}
 	b.invariant()
-	// free(b.data)  // unimplemented.  We gots GC, baby.
+	b.data = nil // Let GC collect the array.
 }
