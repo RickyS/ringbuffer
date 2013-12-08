@@ -1,6 +1,3 @@
-//  Code to help exercise the ringbuffer package, a FIFO, LILO, and Queue.
-//  Call the ringbuffer routines with well-defined sequences of data so we know what to check for.
-//  All the real code for the ring buffer is in ringbuffer/ringbuffer.go
 package ringbuffer
 
 import (
@@ -8,7 +5,11 @@ import (
 	"os"
 )
 
-// Debuggishness
+//  Code to help exercise the ringbuffer package, a FIFO, LILO, and Queue.
+//  Call the ringbuffer routines with well-defined sequences of data so we know what to check for.
+//  All the real code for the ring buffer is in ringbuffer/ringbuffer.go
+
+// Debuggishness: Don't use 'DbgRingElement', it's just for internal test.
 // We read and write type DbgRingElement a lot.  And use its integerness as a check of
 // integrity of the algorithm.
 type DbgRingElement int
@@ -30,7 +31,8 @@ func (b *RingBuffer) WriteV() error {
 	return tmp
 }
 
-func (b *RingBuffer) ReadV() DbgRingElement { // More debuggishness
+// More debuggishness
+func (b *RingBuffer) ReadV() DbgRingElement {
 	tmp := b.ReadD()
 	if tmp != Expected {
 		fmt.Printf("\tERROR: exp %4d != act %4d\n", Expected, tmp)
@@ -57,6 +59,7 @@ func (b *RingBuffer) WriteD(datum DbgRingElement) error {
 	return e
 }
 
+// Testing code
 func (b *RingBuffer) ReadD() DbgRingElement { // More debuggishness
 	bufLen := b.Leng()
 	var tmp DbgRingElement
@@ -75,26 +78,27 @@ func (b *RingBuffer) ReadD() DbgRingElement { // More debuggishness
 	return tmp
 }
 
-// Dump displays the internal variables and the contents of the ring buffer.
+// Dump displays the internal variables and the ENTIRE contents of the ring buffer.
 func (b *RingBuffer) Dump() {
-	if b.invariant() { // Calls Dump() when would return false.
+	if b.invariant() { // Calls Dump() when would return false (that is, when not ok).
 		b.internalDump(``)
 	}
 }
 
 // Called by Dump() and by invariant()
-// 1) Display a line of buffer contents (integers), followed by:
-// 2) A line with the array subscripts of those contents.
+// 1) Show internal subscript values in parens.
+// 2) Display a line of buffer contents (integers?), followed by:
+// 3) A line with the array subscripts of those contents.
 func (b *RingBuffer) internalDump(msg string) {
 	fmt.Printf("\t(In %3d)   (Out %3d)   (Siz %3d)   (len %3d)   (cap %3d) %s [%d]\n",
 		b.in, b.out, b.size, len(b.data), cap(b.data), msg, invNum)
 	// invNum is an error code from the ringbuffer.invariant internal routine.
-	// Must be zero.
+	// It must be zero.
 
 	i, o, s := b.in, b.out, b.size // Save internal ringbuffer state
 	fmt.Printf(" ")
-	for i := 0; 0 < b.Leng(); i++ { // Display the contents.
-		fmt.Printf(" %5d ", b.Read())
+	for i := 0; 0 < b.Leng(); i++ { // Display the ENTIRE contents of the RingBuffer!
+		fmt.Printf(" %5v ", b.Read())
 	}
 	fmt.Println()
 

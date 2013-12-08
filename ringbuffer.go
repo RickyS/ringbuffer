@@ -1,6 +1,7 @@
 // package ringbuffer implements a sequential compact FIFO and LILO. Also called a Queue.
-// To Use:  type RingElement thing
-//          var myThing RingElement
+// To Use:
+//          type myThing ringbuffer.RingElement
+//          var whatever == myThing("whatever") // Assuming a conversion from string.
 //          rb := RingBuffer.New(40)
 //          rb.Write(myThing) // Et cetera
 //          aThing := rb.Read()
@@ -11,6 +12,7 @@
 //  THIS IS NOT CONCURRENT —— ONE GOROUTINE ONLY.
 package ringbuffer
 
+// A ring buffer is stored in an array of ringbuffer.RingElement, of the size requested.
 type RingElement interface{}
 
 type RingBuffer struct {
@@ -23,6 +25,7 @@ type RingBufferError struct {
 	What string
 }
 
+// "Convert" ringbuffer.RingBufferError into a string.
 func (e *RingBufferError) Error() string {
 	return e.What
 }
@@ -32,6 +35,12 @@ var invNum int // invNum is an error code.
 
 // The conditions checked here can best be understood by drawing the obvious diagram of the array.
 func (b *RingBuffer) invariant() bool { // You can remove this function and all ref to it.
+
+	if (nil == b.data) && (0 == b.in) && (0 == b.out) && (0 == b.size) {
+		// The RingBuffer has been nilled out by calling Clear()
+		return true // All is good.
+	}
+
 	capacity := cap(b.data)
 	invNum = 0
 	ok := (0 <= b.in) && (b.in < capacity) &&
@@ -40,7 +49,7 @@ func (b *RingBuffer) invariant() bool { // You can remove this function and all 
 		(capacity == len(b.data))
 
 	if !ok {
-		invNum = 1 // invariant violation number.
+		invNum = 1 // invariant violation number.  Lame but effective.
 	} else {
 		if b.out < b.in {
 			ok = b.size == b.in-b.out
@@ -66,7 +75,7 @@ func (b *RingBuffer) invariant() bool { // You can remove this function and all 
 	return ok
 }
 
-// New allocates and initializes a new ring buffer of specified size
+// New() allocates and initializes a new ring buffer of specified size
 func New(n int) *RingBuffer {
 	b := &RingBuffer{data: make([]RingElement, n), // Contents
 		in: 0, out: 0, size: 0}
@@ -74,9 +83,10 @@ func New(n int) *RingBuffer {
 	return b
 }
 
+// next() does a 'wrapping increment' of a subscript to point to the next element.
 func (b *RingBuffer) next(subscript int) int {
 	subscript++
-	if subscript >= cap(b.data) {
+	if subscript >= cap(b.data) { // I suspect this is quicker than a modulus calculation.
 		subscript = 0
 	}
 	return subscript
@@ -96,7 +106,7 @@ func (b *RingBuffer) Write(datum RingElement) error {
 	return nil
 }
 
-// Read fetches an element from the ring buffer.
+// Read fetches the next element from the ring buffer.
 func (b *RingBuffer) Read() RingElement {
 	if 0 >= b.size {
 		b.invariant()
@@ -127,6 +137,7 @@ func (b *RingBuffer) HasAny() bool {
 }
 
 // Obliterate, Purge, and Remove the contents of the ring buffer.
+// Support your local Garbage Collector!
 func (b *RingBuffer) Clear() {
 	b.in, b.out, b.size = 0, 0, 0
 	for i := 0; i < len(b.data); i++ { // Remove dangling references to avoid leaks.
