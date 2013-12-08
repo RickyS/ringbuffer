@@ -7,8 +7,8 @@
 //          for 0 < rb.Size() {
 //              doSomethingWith(rb.Read())
 //          }
-//          
-//  THIS IS NOT CONCURRENT —— ONE GOROUTINE ONLY. 
+//
+//  THIS IS NOT CONCURRENT —— ONE GOROUTINE ONLY.
 package ringbuffer
 
 type RingElement interface{}
@@ -28,7 +28,7 @@ func (e *RingBufferError) Error() string {
 }
 
 // Inspect the internal state of the ring buffer and complain if not ok.
-var invNum int   // invNum is an error code.
+var invNum int // invNum is an error code.
 
 // The conditions checked here can best be understood by drawing the obvious diagram of the array.
 func (b *RingBuffer) invariant() bool { // You can remove this function and all ref to it.
@@ -129,8 +129,8 @@ func (b *RingBuffer) HasAny() bool {
 // Obliterate, Purge, and Remove the contents of the ring buffer.
 func (b *RingBuffer) Clear() {
 	b.in, b.out, b.size = 0, 0, 0
-	for i := 0; i < len(b.data); i++ {  // Remove dangling references to avoid leaks.
-		b.data[i] = 0
+	for i := 0; i < len(b.data); i++ { // Remove dangling references to avoid leaks.
+		b.data[i] = nil
 	}
 	b.invariant()
 	// free(b.data)  // unimplemented.  We gots GC, baby.
