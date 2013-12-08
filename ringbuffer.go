@@ -15,7 +15,7 @@ type RingElement interface{}
 
 type RingBuffer struct {
 	data    []RingElement
-	in, out int // Place of next in (Write). Place osf next out (Read).  These are subscripts.
+	in, out int // Place of next in (Write). Place of next out (Read).  These are subscripts.
 	size    int // Number of items currenly in the ring buffer.
 }
 
