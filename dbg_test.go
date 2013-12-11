@@ -1,8 +1,10 @@
-package ringbuffer
+package ringbuffer_test
 
 import (
 	"fmt"
 	"os"
+	"ringbuffer"
+	"testing"
 )
 
 //  Code to help exercise the ringbuffer package, a FIFO, LILO, and Queue.
@@ -19,11 +21,11 @@ var ReadCnt, WriteCnt int = 0, 0
 var wValue DbgRingElement = 0   // increasing as the test case.
 var Expected DbgRingElement = 0 // wValue supposed to turn into Expected at the other end.
 
-var opVcnt int = 0
+//var opVcnt int = 0
 
 // ReadV and WriteV are for putting stuff in numeric sequence to check that
 // it comes out in the same numeric sequence.
-func (b *RingBuffer) WriteV() error {
+func (b *ringbuffer.RingBuffer) WriteV() error {
 	tmp := b.WriteD(wValue)
 	if nil == tmp {
 		wValue++
@@ -32,7 +34,7 @@ func (b *RingBuffer) WriteV() error {
 }
 
 // More debuggishness
-func (b *RingBuffer) ReadV() DbgRingElement {
+func (b *ringbuffer.RingBuffer) ReadV() DbgRingElement {
 	tmp := b.ReadD()
 	if tmp != Expected {
 		fmt.Printf("\tERROR: exp %4d != act %4d\n", Expected, tmp)
@@ -44,7 +46,7 @@ func (b *RingBuffer) ReadV() DbgRingElement {
 }
 
 //  ReadD and WriteD call ringbuffer and make basic checks on each call.
-func (b *RingBuffer) WriteD(datum DbgRingElement) error {
+func (b *ringbuffer.RingBuffer) WriteD(datum DbgRingElement) error {
 	f := b.Full()
 	e := b.Write(datum)
 	if f != (e != nil) {
@@ -60,7 +62,7 @@ func (b *RingBuffer) WriteD(datum DbgRingElement) error {
 }
 
 // Testing code
-func (b *RingBuffer) ReadD() DbgRingElement { // More debuggishness
+func (b *ringbuffer.RingBuffer) ReadD() DbgRingElement { // More debuggishness
 	bufLen := b.Leng()
 	var tmp DbgRingElement
 	var ok bool
@@ -79,7 +81,7 @@ func (b *RingBuffer) ReadD() DbgRingElement { // More debuggishness
 }
 
 // Dump displays the internal variables and the ENTIRE contents of the ring buffer.
-func (b *RingBuffer) Dump() {
+func (b *ringbuffer.RingBuffer) Dump() {
 	if b.invariant() { // Calls Dump() when would return false (that is, when not ok).
 		b.internalDump(``)
 	}
@@ -89,7 +91,7 @@ func (b *RingBuffer) Dump() {
 // 1) Show internal subscript values in parens.
 // 2) Display a line of buffer contents (integers?), followed by:
 // 3) A line with the array subscripts of those contents.
-func (b *RingBuffer) internalDump(msg string) {
+func (b *ringbuffer.RingBuffer) internalDump(msg string) {
 	fmt.Printf("\t(In %3d)   (Out %3d)   (Siz %3d)   (len %3d)   (cap %3d) %s [%d]\n",
 		b.in, b.out, b.size, len(b.data), cap(b.data), msg, invNum)
 	// invNum is an error code from the ringbuffer.invariant internal routine.

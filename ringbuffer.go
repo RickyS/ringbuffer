@@ -30,7 +30,7 @@ func (e *RingBufferError) Error() string {
 	return e.What
 }
 
-// Inspect the internal state of the ring buffer and complain if not ok.
+///// Inspect the internal state of the ring buffer and complain if not ok. ////
 var invNum int // invNum is an error code.
 
 // The conditions checked here can best be understood by drawing the obvious diagram of the array.
@@ -74,6 +74,8 @@ func (b *RingBuffer) invariant() bool { // You can remove this function and all 
 	}
 	return ok
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 // New() allocates and initializes a new ring buffer of specified size
 func New(n int) *RingBuffer {
