@@ -7,9 +7,10 @@ import (
 	//"testing"
 )
 
-//  Code to help exercise the ringbuffer package, a FIFO, LILO, and Queue.
-//  Call the ringbuffer routines with well-defined sequences of data so we know what to check for.
-//  All the real code for the ring buffer is in ringbuffer/ringbuffer.go
+// Code to help exercise the ringbuffer package, a FIFO, LILO, and Queue.
+// Call the ringbuffer routines with well-defined sequences of data so we know
+// what to expect to read.
+// All the real code for the ring buffer is in ringbuffer/ringbuffer.go
 
 // Debuggishness: Don't use 'DbgRingElement', it's just for internal test.
 // We read and write type DbgRingElement a lot.  And use its integerness as a check of
@@ -18,15 +19,6 @@ type DbgRingElement int
 
 type dbgBuffer ringbuffer.RingBuffer
 
-/*func rngb(b *dbgBuffer) *ringbuffer.RingBuffer {
-	rb, ok := b.(*ringbuffer.RingBuffer)
-	if nil != ok {
-		fmt.Println("Type Fail")
-		os.Exit(128)
-	}
-	return rb
-}
-*/
 var ReadCnt, WriteCnt int = 0, 0
 
 var wValue DbgRingElement = 0   // increasing as the test case.
