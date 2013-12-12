@@ -77,16 +77,16 @@ func TestInterleaved(t *testing.T) {
 		doRead := 0 == (1 & x)              // isOdd ?
 		if doRead && (i > (6 + b.Leng())) { // no Reading until we've overflowed the buffer.
 			if 0 < b.Leng() {
-				_ = b.ReadV()
+				_ = (*dbgBuffer)(b).ReadV()
 			} else {
 				SkipCnt++
 			}
 		} else {
-			b.WriteV() // This provides the value to write.
+			(*dbgBuffer)(b).WriteV() // This provides the value to write.
 		}
 	}
 	for b.HasAny() {
-		_ = b.ReadV()
+		_ = (*dbgBuffer)(b).ReadV()
 	}
 	b.Dump()
 }
