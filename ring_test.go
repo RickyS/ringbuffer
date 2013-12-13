@@ -57,7 +57,7 @@ func TestMillion(t *testing.T) {
 		var rBuf = ringbuffer.New(big)
 		So(rBuf, ShouldNotBeNil)
 		So(0, ShouldEqual, rBuf.Leng())
-		fmt.Println("———————→ Million Buffer March ←———————")
+		//fmt.Println("———————→ Million Buffer March ←———————")
 
 		nnn := 0
 		for {

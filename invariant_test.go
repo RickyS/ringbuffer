@@ -1,7 +1,7 @@
 package ringbuffer
 
 import (
-	"fmt"
+	//"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"math/rand"
 	"testing"
@@ -49,23 +49,47 @@ func (b *RingBuffer) invariants() bool { // You can remove this function and all
 	return ok
 }
 
+var myT *testing.T
+
 // Randomishly write and read, checking the invariants.
 func TestInterleaved(t *testing.T) {
-	fmt.Println("———————→ Interleaved ←———————")
+	myT = t
+	//fmt.Println("———————→ Interleaved. ←———————")
 	const bufferSize = 450
+	const maxLoops = 6174 // why not use the "Mysterious Number of Keprekar"?
 	Convey("Interleaved Randomly", t, func() {
+		So(maxLoops, ShouldBeGreaterThan, bufferSize)
 		var b *RingBuffer
 		So(b, ShouldBeNil)
 		r := rand.New(rand.NewSource(99))
 		b = New(bufferSize)
 		So(b, ShouldNotBeNil)
+
 		So(b.invariants(), ShouldBeTrue)
 		b.Dump()
 		SkipCnt := 0
-		for i := 0; i < 3317; i++ {
+		var phaseCnt = 0 // Have we overflowed?
+		for i := 0; i < maxLoops; i++ {
 			x := r.Intn(512)
-			doRead := 0 == (1 & x)              // isOdd ?
-			if doRead && (i > (6 + b.Leng())) { // no Reading until we've overflowed the buffer.
+			doRead := (0 == (1 & x)) && (i > (6 + b.Leng())) // isOdd && no Reading until
+			// we've overflowed the buffer.
+
+			if 1 == phaseCnt {
+				intervene := (x & 0x102) == 0x102 // 2 bits match 1/4 of the time.
+				bLeng := b.Leng()
+				if bLeng > ((bufferSize * 2) / 3) {
+					if intervene {
+						doRead = true // Usually read when fullish.
+					}
+				} else if bLeng < (bufferSize / 3) {
+					if intervene {
+						doRead = false // When buffer low, write more.
+					}
+				}
+			}
+
+			if doRead {
+				phaseCnt = 1
 				if 0 < b.Leng() {
 					_ = b.ReadV()
 				} else {
@@ -76,7 +100,8 @@ func TestInterleaved(t *testing.T) {
 			}
 		}
 		for b.HasAny() {
-			_ = b.ReadV()
+			x := b.ReadV()
+			So(x, ShouldHaveSameTypeAs, exemplar)
 		}
 	})
 }
@@ -84,68 +109,69 @@ func TestInterleaved(t *testing.T) {
 //////
 type DbgRingElement int
 
-/// type RingBuffer RingBuffer
+var exemplar DbgRingElement = 17 // For type checking.
 
 var ReadCnt, WriteCnt int = 0, 0
 
 var wValue DbgRingElement = 0   // increasing as the test case.
 var Expected DbgRingElement = 0 // wValue supposed to turn into Expected at the other end.
 
-//var opVcnt int = 0
-
 // ReadV and WriteV are for putting stuff in numeric sequence to check that
 // it comes out in the same numeric sequence.
 func (b *RingBuffer) WriteV() error {
 	tmp := b.WriteD(wValue)
-	if nil == tmp {
-		wValue++
+	if nil == tmp { // error return is NOT a bug.
+		wValue++ // wValue turns to Expected at the other end...
 	}
 	return tmp
 }
 
 // More debuggishness
 func (b *RingBuffer) ReadV() DbgRingElement {
-	tmp := b.ReadD()
-	if tmp != Expected {
-		fmt.Printf("\tERROR: exp %4d != act %4d\n", Expected, tmp)
-		// b.Dump()
-		// os.Exit(2)
-	}
-	Expected = tmp + 1 // also re-synchronize if error found.
+	var tmp DbgRingElement
+	Convey("ReadV", func() {
+		tmp := b.ReadD()
+		So(tmp, ShouldHaveSameTypeAs, exemplar)
+		So(b.invariants(), ShouldBeTrue)
+		So(tmp, ShouldEqual, Expected)
+		Expected = tmp + 1 // also re-synchronize if error found.
+	})
 	return tmp
 }
 
 //  ReadD and WriteD call ringbuffer and make basic checks on each call.
 func (b *RingBuffer) WriteD(datum DbgRingElement) error {
-	f := b.Full()
-	e := b.Write(datum)
-	if f != (e != nil) {
-		fmt.Printf("\tERROR: full %4v but e %4v\n\t:", f, e) // Error in package.
-	} else if e != nil {
-		//fmt.Printf("E✔\t %q (w %d)\t\n", e, datum) // Healthy error return.
-	} else {
-		//fmt.Printf("W %3d\t\t:", datum)
-		WriteCnt++
-	}
-	//b.Dump()
+	var e error
+	Convey("WriteD", func() {
+		f := b.Full()
+		e = b.Write(datum)
+		So(b.invariants(), ShouldBeTrue)
+		errReturned := (nil != e)
+		So(f, ShouldEqual, errReturned)
+		if !errReturned {
+			WriteCnt++
+		}
+		//b.Dump()
+	})
 	return e
 }
 
 // Testing code
 func (b *RingBuffer) ReadD() DbgRingElement { // More debuggishness
-	bufLen := b.Leng()
 	var tmp DbgRingElement
-	var ok bool
-	if 0 < bufLen {
-		tmp, ok = (b.Read()).(DbgRingElement) // Type assertion.
-		if !ok {
-			fmt.Printf("ReadD Type Failure, size %4d\n", bufLen)
-			b.Dump()
-		} else {
+	Convey("ReadD", func() {
+		bufLen := b.Leng()
+		So(b.invariants(), ShouldBeTrue)
+
+		var ok bool
+		if 0 < bufLen {
+			tmp, ok = (b.Read()).(DbgRingElement) // Type assertion.
+			So(tmp, ShouldHaveSameTypeAs, exemplar)
+			So(ok, ShouldBeTrue)
+			So(b.invariants(), ShouldBeTrue)
 			ReadCnt++
 		}
-	}
-
+	})
 	//b.Dump()
 	return tmp
 }
