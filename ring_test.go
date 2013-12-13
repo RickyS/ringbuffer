@@ -1,10 +1,10 @@
-// Some of the test code is in ringbuffer/ringDebug.go, that
-// should change.
+// Some of the test code is in ringbuffer/dbg_test.go, also.
 package ringbuffer_test
 
 import (
 	"fmt"
-	"math/rand"
+	. "github.com/smartystreets/goconvey/convey"
+	//"math/rand"
 	"ringbuffer"
 	"testing"
 )
@@ -28,65 +28,53 @@ var ksa = [...]kitchenSink{
 }
 
 func TestKitchenSmall(t *testing.T) {
-	var rBuf = ringbuffer.New(11) // Create the ring buffer with the specified size.
-	for _, va := range ksa {      // Add in the kitchenSink structs.
+	const quantity = 11
+	var rBuf = ringbuffer.New(quantity) // Create the ring buffer with the specified size.
+	Convey("Blank Buffer 11", t, func() {
+		So(rBuf.Leng(), ShouldEqual, 0)
+	})
+	for _, va := range ksa { // Add in the kitchenSink structs.
 		e := rBuf.Write(va)
 		if nil != e {
 			t.Fatalf("ksa Oopsie\n")
 		}
 	}
+	Convey("Full Buffer Wrote 11", t, func() {
+		So(rBuf.Leng(), ShouldEqual, len(ksa))
+	})
 	// Now get them all out:
 	for rBuf.HasAny() {
 		fmt.Printf("→ %v\n", rBuf.Read())
 	}
+	Convey("Empty Buffer 11", t, func() {
+		So(rBuf.Leng(), ShouldEqual, 0)
+	})
 }
 
 func TestMillion(t *testing.T) {
 	const big = 1000000 // A million
-	var rBuf = ringbuffer.New(big)
-	fmt.Println("———————→ Million Buffer March ←———————")
+	Convey("A Million elements", t, func() {
+		var rBuf = ringbuffer.New(big)
+		So(rBuf, ShouldNotBeNil)
+		So(0, ShouldEqual, rBuf.Leng())
+		fmt.Println("———————→ Million Buffer March ←———————")
 
-	nnn := 0
-	for {
-		e := rBuf.Write(&kitchenSink{words: "bogosity", nums: [4]int{nnn, 1 + nnn, 2 + nnn, 3 + nnn}})
-		if nil != e {
-			//fmt.Printf("Fatal Error Required: %v", e)
-			break
-		}
-		nnn += 4
-	}
-
-	rc := 0
-	for rBuf.HasAny() {
-		_ = rBuf.Read()
-		rc++
-	}
-	fmt.Println("Read ", rc, " times.")
-
-	//fmt.Println("Done")
-}
-
-func TestInterleaved(t *testing.T) {
-	fmt.Println("———————→ Interleaved ←———————")
-	r := rand.New(rand.NewSource(99))
-	b := ringbuffer.New(45)
-	b.Dump()
-	SkipCnt := 0
-	for i := 0; i < 3317; i++ {
-		x := r.Intn(512)
-		doRead := 0 == (1 & x)              // isOdd ?
-		if doRead && (i > (6 + b.Leng())) { // no Reading until we've overflowed the buffer.
-			if 0 < b.Leng() {
-				_ = (*dbgBuffer)(b).ReadV()
-			} else {
-				SkipCnt++
+		nnn := 0
+		for {
+			e := rBuf.Write(&kitchenSink{words: "bogosity", nums: [4]int{nnn, 1 + nnn, 2 + nnn, 3 + nnn}})
+			if nil != e {
+				//fmt.Printf("Fatal Error Required: %v", e)
+				break
 			}
-		} else {
-			(*dbgBuffer)(b).WriteV() // This provides the value to write.
+			nnn += 4
 		}
-	}
-	for b.HasAny() {
-		_ = (*dbgBuffer)(b).ReadV()
-	}
-	b.Dump()
+
+		rc := 0
+		for rBuf.HasAny() {
+			_ = rBuf.Read()
+			rc++
+		}
+		fmt.Println("Read ", rc, " times.")
+	})
+	//fmt.Println("Done")
 }
