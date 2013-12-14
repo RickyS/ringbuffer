@@ -1,7 +1,7 @@
 package ringbuffer
 
 import (
-	//"fmt"
+	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"math/rand"
 	"testing"
@@ -9,6 +9,15 @@ import (
 
 ///// Inspect the INTERNAL state of the ring buffer. ////
 //var invNum int // invNum is an error code.
+
+type DbgRingElement int
+
+var exemplar DbgRingElement = 17 // For type checking.
+
+var iReadCnt, iWriteCnt int = 0, 0
+
+var wValue DbgRingElement = 0   // increasing as the test case.
+var Expected DbgRingElement = 0 // wValue supposed to turn into Expected at the other end.
 
 // The conditions checked here can best be understood by drawing the obvious diagram of the array.
 func (b *RingBuffer) invariants() bool { // You can remove this function and all ref to it.
@@ -49,11 +58,12 @@ func (b *RingBuffer) invariants() bool { // You can remove this function and all
 	return ok
 }
 
-var myT *testing.T
+var (
+	xR, xW, dR1, dW1, makR, makW, changeCnt, fR int
+)
 
 // Randomishly write and read, checking the invariants.
 func TestInterleaved(t *testing.T) {
-	myT = t
 	//fmt.Println("———————→ Interleaved. ←———————")
 	const bufferSize = 450
 	const maxLoops = 6174 // why not use the "Mysterious Number of Keprekar"?
@@ -67,54 +77,75 @@ func TestInterleaved(t *testing.T) {
 
 		So(b.invariants(), ShouldBeTrue)
 		b.Dump()
-		SkipCnt := 0
+		iSkipCnt := 0
 		var phaseCnt = 0 // Have we overflowed?
-		for i := 0; i < maxLoops; i++ {
-			x := r.Intn(512)
-			doRead := (0 == (1 & x)) && (i > (6 + b.Leng())) // isOdd && no Reading until
-			// we've overflowed the buffer.
+		var interveneCnt = 0
+		var doiReadCnt = 0
 
+		for i := 0; i < maxLoops; i++ {
+			x := r.Intn(0x600)
+			doRead := (0 == (1 & x)) && (i > (6 + bufferSize)) // isOdd && no Reading until
+			// we've overflowed the buffer.
+			if doRead {
+				dR1++
+			} else {
+				dW1++
+			}
+
+			if (0 == phaseCnt) && b.Full() {
+				phaseCnt = 1
+			}
+			oldDoRead := doRead
 			if 1 == phaseCnt {
-				intervene := (x & 0x102) == 0x102 // 2 bits match 1/4 of the time.
-				bLeng := b.Leng()
-				if bLeng > ((bufferSize * 2) / 3) {
-					if intervene {
+				intervene := (x & 0x12) == 0x12 // 2 bits are 1: 1/4 of the time.
+				if intervene {
+					interveneCnt++
+					bLeng := b.Leng()
+					if bLeng > ((bufferSize * 2) / 3) {
 						doRead = true // Usually read when fullish.
-					}
-				} else if bLeng < (bufferSize / 3) {
-					if intervene {
+						makR++
+					} else if bLeng < (bufferSize / 3) {
 						doRead = false // When buffer low, write more.
+						makW++
 					}
 				}
+			}
+			if oldDoRead != doRead {
+				changeCnt++
 			}
 
 			if doRead {
-				phaseCnt = 1
-				if 0 < b.Leng() {
+				doiReadCnt++
+				if b.HasAny() {
 					_ = b.ReadV()
+					xR++
 				} else {
-					SkipCnt++
+					iSkipCnt++ // Avoid errors.  Makes calculations simpler.
 				}
 			} else {
 				b.WriteV() // This provides the value to write.
+				xW++
 			}
 		}
+
 		for b.HasAny() {
 			x := b.ReadV()
 			So(x, ShouldHaveSameTypeAs, exemplar)
+			fR++
 		}
+
+		//So((iReadCnt + iSkipCnt))
+		fmt.Printf("iReadCnt %4d, iWriteCnt %4d, iSkipCnt %4d, (sum %4d), Expected %4d: Leftover %4d\n",
+			iReadCnt, iWriteCnt, iSkipCnt,
+			iReadCnt+iWriteCnt+iSkipCnt, Expected, b.Leng())
+		fmt.Printf("InterveneCnt %4d, doiReadCnt %4d, xR %4d, xW %4d, dR1 %4d, dW1 %4d, ph %d\n",
+			interveneCnt, doiReadCnt, xR, xW, dR1, dW1, phaseCnt)
+		fmt.Printf("makR %4d, makW %4d, changeCnt %4d, fR %4d\n", makR, makW, changeCnt, fR)
+
 	})
 }
 
 //////
-type DbgRingElement int
-
-var exemplar DbgRingElement = 17 // For type checking.
-
-var ReadCnt, WriteCnt int = 0, 0
-
-var wValue DbgRingElement = 0   // increasing as the test case.
-var Expected DbgRingElement = 0 // wValue supposed to turn into Expected at the other end.
 
 // ReadV and WriteV are for putting stuff in numeric sequence to check that
 // it comes out in the same numeric sequence.
@@ -132,7 +163,6 @@ func (b *RingBuffer) ReadV() DbgRingElement {
 	Convey("ReadV", func() {
 		tmp := b.ReadD()
 		So(tmp, ShouldHaveSameTypeAs, exemplar)
-		So(b.invariants(), ShouldBeTrue)
 		So(tmp, ShouldEqual, Expected)
 		Expected = tmp + 1 // also re-synchronize if error found.
 	})
@@ -143,13 +173,14 @@ func (b *RingBuffer) ReadV() DbgRingElement {
 func (b *RingBuffer) WriteD(datum DbgRingElement) error {
 	var e error
 	Convey("WriteD", func() {
-		f := b.Full()
+		isFull := b.Full()
+		So(b.invariants(), ShouldBeTrue)
 		e = b.Write(datum)
 		So(b.invariants(), ShouldBeTrue)
 		errReturned := (nil != e)
-		So(f, ShouldEqual, errReturned)
+		So(isFull, ShouldEqual, errReturned)
 		if !errReturned {
-			WriteCnt++
+			iWriteCnt++
 		}
 		//b.Dump()
 	})
@@ -162,15 +193,14 @@ func (b *RingBuffer) ReadD() DbgRingElement { // More debuggishness
 	Convey("ReadD", func() {
 		bufLen := b.Leng()
 		So(b.invariants(), ShouldBeTrue)
+		So(bufLen, ShouldBeGreaterThan, 0)
 
 		var ok bool
-		if 0 < bufLen {
-			tmp, ok = (b.Read()).(DbgRingElement) // Type assertion.
-			So(tmp, ShouldHaveSameTypeAs, exemplar)
-			So(ok, ShouldBeTrue)
-			So(b.invariants(), ShouldBeTrue)
-			ReadCnt++
-		}
+		tmp, ok = (b.Read()).(DbgRingElement) // Type assertion.
+		So(tmp, ShouldHaveSameTypeAs, exemplar)
+		So(ok, ShouldBeTrue)
+		So(b.invariants(), ShouldBeTrue)
+		iReadCnt++
 	})
 	//b.Dump()
 	return tmp

@@ -27,6 +27,43 @@ var ksa = [...]kitchenSink{
 	kitchenSink{nums: [4]int{987654321, 1234567890, 0, -1234567890}, words: "No slices allowed!"},
 }
 
+func TestFull(t *testing.T) {
+	const quantity = 17
+	Convey("Full 17", t, func() {
+		var rBuf = ringbuffer.New(quantity)
+		So(rBuf, ShouldNotBeNil)
+
+		So(rBuf.Full(), ShouldBeFalse)
+		So(rBuf.HasAny(), ShouldBeFalse)
+		So(rBuf.Leng(), ShouldEqual, 0)
+		var i int
+		for i = 0; i < quantity; i++ {
+			e := rBuf.Write(i)
+			if nil != e {
+				t.Fatalf("Can't write %d of %d\n", i, quantity)
+			}
+		}
+		e := rBuf.Write(i + 1) // Overflow must return error.
+		So(e, ShouldNotBeNil)
+		var rbe *ringbuffer.RingBufferError
+		So(e, ShouldHaveSameTypeAs, rbe)
+		///
+		So(rBuf.Full(), ShouldBeTrue)
+		So(rBuf.HasAny(), ShouldBeTrue)
+		So(rBuf.Leng(), ShouldEqual, quantity)
+		x := rBuf.Read()
+		So(rBuf.Full(), ShouldBeFalse)
+		So(rBuf.HasAny(), ShouldBeTrue)
+		So(rBuf.Leng(), ShouldEqual, quantity-1)
+		So(x, ShouldEqual, 0)
+		So(x, ShouldHaveSameTypeAs, quantity)
+		rBuf.Clear()
+		So(rBuf.Leng(), ShouldEqual, 0)
+		So(rBuf.Full(), ShouldBeFalse)
+		So(rBuf.HasAny(), ShouldBeFalse)
+
+	})
+}
 func TestKitchenSmall(t *testing.T) {
 	const quantity = 11
 	var rBuf = ringbuffer.New(quantity) // Create the ring buffer with the specified size.

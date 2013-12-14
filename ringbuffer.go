@@ -130,7 +130,8 @@ func (b *RingBuffer) Leng() int {
 // Is the buffer currently full?
 func (b *RingBuffer) Full() bool {
 	b.invariant()
-	return b.size >= cap(b.data)
+	return (nil != b.data) &&
+		(b.size >= cap(b.data))
 }
 
 // Any left to read?
