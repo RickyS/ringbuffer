@@ -18,6 +18,7 @@ func (b *RingBuffer) Dump() {
 // 2) Display a line of buffer contents (integers?), followed by:
 // 3) A line with the array subscripts of those contents.
 func (b *RingBuffer) internalDump(msg string) {
+	fmt.Printf("RingBuffer %08p\n", b)
 	fmt.Printf("\t(In %3d)   (Out %3d)   (Siz %3d)   (len %3d)   (cap %3d) %s [%d]\n",
 		b.in, b.out, b.size, len(b.data), cap(b.data), msg, invNum)
 	// invNum is an error code from the ringbuffer.invariant internal routine.

@@ -97,7 +97,7 @@ func (b *RingBuffer) next(subscript int) int {
 // Write inserts an element into the ring buffer.
 func (b *RingBuffer) Write(datum RingElement) error {
 	if b.size >= cap(b.data) {
-		return &RingBufferError{"RingBuffer is full\n"}
+		return &RingBufferError{"RingBuffer is full"}
 	}
 
 	b.data[b.in] = datum
@@ -130,6 +130,9 @@ func (b *RingBuffer) Leng() int {
 // Is the buffer currently full?
 func (b *RingBuffer) Full() bool {
 	b.invariant()
+	if nil == b {
+		return true // best we can do? Even Possible?
+	}
 	return (nil != b.data) &&
 		(b.size >= cap(b.data))
 }

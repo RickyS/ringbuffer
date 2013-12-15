@@ -28,21 +28,33 @@ var ksa = [...]kitchenSink{
 }
 
 func TestFull(t *testing.T) {
-	const quantity = 17
-	Convey("Full 17", t, func() {
+	const quantity = 7
+	Convey("Full 7", t, func() {
 		var rBuf = ringbuffer.New(quantity)
 		So(rBuf, ShouldNotBeNil)
 
 		So(rBuf.Full(), ShouldBeFalse)
 		So(rBuf.HasAny(), ShouldBeFalse)
 		So(rBuf.Leng(), ShouldEqual, 0)
+		// Read empty ringbuffer:
+		x := rBuf.Read()
+		So(rBuf.Full(), ShouldBeFalse)
+		So(rBuf.HasAny(), ShouldBeFalse)
+		So(rBuf.Leng(), ShouldEqual, 0)
+		So(x, ShouldEqual, 0) /// Controversial — Return 0 on empty !!
+		So(x, ShouldHaveSameTypeAs, quantity)
+
 		var i int
 		for i = 0; i < quantity; i++ {
 			e := rBuf.Write(i)
 			if nil != e {
 				t.Fatalf("Can't write %d of %d\n", i, quantity)
 			}
+			So((i < (quantity-1)) && rBuf.Full(), ShouldBeFalse)
 		}
+		// Test Dumping:
+		rBuf.Dump()
+		// Overflow
 		e := rBuf.Write(i + 1) // Overflow must return error.
 		So(e, ShouldNotBeNil)
 		var rbe *ringbuffer.RingBufferError
@@ -51,7 +63,7 @@ func TestFull(t *testing.T) {
 		So(rBuf.Full(), ShouldBeTrue)
 		So(rBuf.HasAny(), ShouldBeTrue)
 		So(rBuf.Leng(), ShouldEqual, quantity)
-		x := rBuf.Read()
+		x = rBuf.Read()
 		So(rBuf.Full(), ShouldBeFalse)
 		So(rBuf.HasAny(), ShouldBeTrue)
 		So(rBuf.Leng(), ShouldEqual, quantity-1)
