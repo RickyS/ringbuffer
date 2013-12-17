@@ -41,8 +41,7 @@ func TestFull(t *testing.T) {
 		So(rBuf.Full(), ShouldBeFalse)
 		So(rBuf.HasAny(), ShouldBeFalse)
 		So(rBuf.Leng(), ShouldEqual, 0)
-		So(x, ShouldEqual, 0) /// Controversial — Return 0 on empty !!
-		So(x, ShouldHaveSameTypeAs, quantity)
+		So(x, ShouldBeNil) /// Return nil on empty.
 
 		var i int
 		for i = 0; i < quantity; i++ {

@@ -12,6 +12,10 @@
 //  THIS IS NOT CONCURRENT —— ONE GOROUTINE ONLY.
 package ringbuffer
 
+import (
+	"fmt"
+)
+
 // A ring buffer is stored in an array of ringbuffer.RingElement, of the size requested.
 type RingElement interface{}
 
@@ -97,12 +101,16 @@ func (b *RingBuffer) next(subscript int) int {
 // Write inserts an element into the ring buffer.
 func (b *RingBuffer) Write(datum RingElement) error {
 	if b.size >= cap(b.data) {
+		fmt.Printf("!Full b %p, size %d, cap %d\n", b, b.size, cap(b.data))
 		return &RingBufferError{"RingBuffer is full"}
 	}
 
 	b.data[b.in] = datum
 	b.in = b.next(b.in)
 	b.size++
+	if 0 >= b.size {
+		fmt.Printf("\n\tSHIT !  b.size %d, b %p, cap(b.data) %d\n", b.size, b, cap(b.data))
+	}
 	b.invariant()
 
 	return nil
@@ -112,7 +120,7 @@ func (b *RingBuffer) Write(datum RingElement) error {
 func (b *RingBuffer) Read() RingElement {
 	if 0 >= b.size {
 		b.invariant()
-		return 0
+		return nil // Nil is our EOF.  Could use an error return, too.
 		//return &RingBufferError{"RingBuffer is empty\n"}
 	}
 	b.size--

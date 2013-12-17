@@ -11,3 +11,7 @@ function rr () {
 }
 declare -f rr
 declare -f cover
+
+getconvey () {
+    go get -u -t -x github.com/smartystreets/getconvey
+}
