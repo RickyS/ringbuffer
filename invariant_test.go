@@ -91,7 +91,7 @@ func (b *RingBuffer) WriteVer() error {
 func (b *RingBuffer) WriteDet(datum DbgRingElement) error {
 	var err error
 	//fmt.Printf("WriteDet %v, b %p, cap(b.data) %d, b.size %d\n", datum, b, cap(b.data), b.size)
-	//Convey("WriteDet", func() {
+	//Convey("WriteDet", func() { // THIS CAUSES BUG. TODO:  TRACK DOWN.
 	// SkipConvey(" Checking ", func() {
 	//  So(b, ShouldNotBeNil)
 	//  So(b.invariants(), ShouldBeTrue)

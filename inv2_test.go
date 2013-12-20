@@ -13,7 +13,7 @@ var (
 
 // Simplified version of "TestInterleaved", which was too complex to debug.
 func TestRand(t *testing.T) {
-	fmt.Println("———————→ TestRand ←———————")
+	//fmt.Println("———————→ TestRand ←———————")
 	const bufferSize = 450
 	const maxLoops = 6174 // why not use the "Mysterious Number of Keprekar"?
 	// const bufferSize = 6
@@ -62,15 +62,13 @@ func TestRand(t *testing.T) {
 			if (0 == phaseCnt) && b.Full() {
 				phaseCnt = 1
 			}
+			So(cap(b.data), ShouldEqual, bufferSize) // Now this is redundant.  Used be needed.
+
 			if doRead {
 				doiReadCnt++
 				_ = b.ReadVer()
 				xR++
 			} else {
-				//So(cap(b.data), ShouldBeGreaterThan, 0)
-				//which := fmt.Sprintf("Intlv Wv %2d, Leng %d, cap %d, b %08p\n", wValue, b.Leng(), cap(b.data), b)
-				//b.Dump()
-				//Convey(which, func() {
 				erra := b.WriteVer() // This provides the value to write: wValue.
 				So(b.size, ShouldEqual, b.Leng())
 				if nil == erra {
@@ -80,7 +78,6 @@ func TestRand(t *testing.T) {
 					//fmt.Printf("WriteVer yields %v, wValue %d\n", erra, wValue)
 				}
 				xW++
-				//})
 			}
 		}
 		dumpData(b)
