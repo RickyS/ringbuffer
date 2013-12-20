@@ -93,10 +93,10 @@ func (b *RingBuffer) WriteDet(datum DbgRingElement) error {
 	//fmt.Printf("WriteDet %v, b %p, cap(b.data) %d, b.size %d\n", datum, b, cap(b.data), b.size)
 	//Convey("WriteDet", func() { // THIS CAUSES BUG. TODO:  TRACK DOWN.
 	// SkipConvey(" Checking ", func() {
-	//  So(b, ShouldNotBeNil)
-	//  So(b.invariants(), ShouldBeTrue)
-	//  So(b.data, ShouldNotBeNil)
-	//  So(cap(b.data), ShouldBeGreaterThan, 0)
+	So(b, ShouldNotBeNil)
+	So(b.invariants(), ShouldBeTrue)
+	So(b.data, ShouldNotBeNil)
+	So(cap(b.data), ShouldBeGreaterThan, 0)
 	// })
 	//So(b.invariants(), ShouldBeTrue)
 	preFull := b.Full()
