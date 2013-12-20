@@ -8,12 +8,9 @@ import (
 
 // Dump displays the internal variables and the ENTIRE contents of the ring buffer.
 func (b *RingBuffer) Dump() {
-	if b.invariant() { // Calls Dump() when would return false (that is, when not ok).
-		b.internalDump(``)
-	}
+	b.internalDump(``)
 }
 
-// Called by Dump() and by invariant()
 // 1) Show internal subscript values in parens.
 // 2) Display a line of buffer contents (integers?), followed by:
 // 3) A line with the array subscripts of those contents.

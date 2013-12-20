@@ -37,55 +37,10 @@ func (e *RingBufferError) Error() string {
 ///// Inspect the internal state of the ring buffer and complain if not ok. ////
 var invNum int // invNum is an error code.
 
-// The conditions checked here can best be understood by drawing the obvious diagram of the array.
-func (b *RingBuffer) invariant() bool { // You can remove this function and all ref to it.
-
-	if (nil == b.data) && (0 == b.in) && (0 == b.out) && (0 == b.size) {
-		// The RingBuffer has been nilled out by calling Clear()
-		return true // All is good.
-	}
-
-	capacity := cap(b.data)
-	invNum = 0
-	ok := (0 <= b.in) && (b.in < capacity) &&
-		(0 <= b.out) && (b.out < capacity) &&
-		(0 <= b.size) && (b.size <= capacity) && // size can equal capacity.  Subscripts cannot.
-		(capacity == len(b.data))
-
-	if !ok {
-		invNum = 1 // invariant violation number.  Lame but effective.
-	} else {
-		if b.out < b.in {
-			ok = b.size == b.in-b.out
-			if !ok {
-				invNum = 2
-			}
-		} else if b.in < b.out {
-			ok = b.size == (capacity-b.out)+b.in
-			if !ok {
-				invNum = 3
-			}
-		} else { //  in == out
-			ok = (0 == b.size) || (capacity == b.size)
-			if !ok {
-				invNum = 4
-			}
-		}
-	}
-
-	if !ok {
-		b.internalDump("invariant")
-	}
-	return ok
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
 // New() allocates and initializes a new ring buffer of specified size
 func New(n int) *RingBuffer {
 	b := &RingBuffer{data: make([]RingElement, n), // Contents
 		in: 0, out: 0, size: 0}
-	b.invariant()
 	return b
 }
 
@@ -111,7 +66,6 @@ func (b *RingBuffer) Write(datum RingElement) error {
 	if 0 >= b.size {
 		fmt.Printf("\n\tSHIT !  b.size %d, b %p, cap(b.data) %d\n", b.size, b, cap(b.data))
 	}
-	b.invariant()
 
 	return nil
 }
@@ -119,7 +73,6 @@ func (b *RingBuffer) Write(datum RingElement) error {
 // Read fetches the next element from the ring buffer.
 func (b *RingBuffer) Read() RingElement {
 	if 0 >= b.size {
-		b.invariant()
 		return nil // Nil is our EOF.  Could use an error return, too.
 		//return &RingBufferError{"RingBuffer is empty\n"}
 	}
@@ -131,13 +84,11 @@ func (b *RingBuffer) Read() RingElement {
 
 // Number of slots currently in use.  Total writes - Total reads.
 func (b *RingBuffer) Leng() int {
-	b.invariant()
 	return b.size
 }
 
 // Is the buffer currently full?
 func (b *RingBuffer) Full() bool {
-	b.invariant()
 	if nil == b {
 		return true // best we can do? Even Possible?
 	}
@@ -157,6 +108,5 @@ func (b *RingBuffer) Clear() {
 	for i := 0; i < len(b.data); i++ { // Remove dangling references to avoid leaks.
 		b.data[i] = nil
 	}
-	b.invariant()
 	b.data = nil // Let GC collect the array.
 }
