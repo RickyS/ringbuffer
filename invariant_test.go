@@ -1,7 +1,7 @@
 package ringbuffer
 
 import (
-	"fmt"
+	//"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	//"math/rand"
 	//"testing"
@@ -76,7 +76,7 @@ func (b *RingBuffer) WriteVer() error {
 	if 0 >= cap(b.data) {
 		So(cap(b.data), ShouldBeGreaterThan, 0) // check it twice to reduce output.
 	}
-	fmt.Printf("WriteVer %v, b %p, cap(b.data) %d, b.size %d\n", wValue, b, cap(b.data), b.size)
+	//fmt.Printf("WriteVer %v, b %p, cap(b.data) %d, b.size %d\n", wValue, b, cap(b.data), b.size)
 	eRR := b.WriteDet(wValue)
 	if nil == eRR { // error return is NOT a bug in our package.  May be a bug by the user.
 		wValue++ // wValue turns to Expected at the other end...
@@ -90,7 +90,7 @@ func (b *RingBuffer) WriteVer() error {
 //  ReadDet and WriteDet call ringbuffer and make basic checks on each call.
 func (b *RingBuffer) WriteDet(datum DbgRingElement) error {
 	var err error
-	fmt.Printf("WriteDet %v, b %p, cap(b.data) %d, b.size %d\n", datum, b, cap(b.data), b.size)
+	//fmt.Printf("WriteDet %v, b %p, cap(b.data) %d, b.size %d\n", datum, b, cap(b.data), b.size)
 	//Convey("WriteDet", func() {
 	// SkipConvey(" Checking ", func() {
 	//  So(b, ShouldNotBeNil)
@@ -101,7 +101,7 @@ func (b *RingBuffer) WriteDet(datum DbgRingElement) error {
 	//So(b.invariants(), ShouldBeTrue)
 	preFull := b.Full()
 	err = b.Write(datum)
-	fmt.Printf("WriteDeT %v, b %p, cap(b.data) %d, b.size %d\n", datum, b, cap(b.data), b.size)
+	//fmt.Printf("WriteDeT %v, b %p, cap(b.data) %d, b.size %d\n", datum, b, cap(b.data), b.size)
 	isFull := b.Full()
 	if preFull {
 		So(isFull, ShouldBeTrue)
@@ -111,9 +111,9 @@ func (b *RingBuffer) WriteDet(datum DbgRingElement) error {
 	}
 	errReturned := (nil != err)
 	if errReturned {
-		fmt.Printf("\nWriteD err '%v', isFull %v, preFull %v, datum %v, iWriteCnt %3d, Leng %3d, b %08p\n",
-			err, isFull, preFull, datum, iWriteCnt, b.Leng(), b)
-		b.Dump()
+		// fmt.Printf("\nWriteD err '%v', isFull %v, preFull %v, datum %v, iWriteCnt %3d, Leng %3d, b %08p\n",
+		//	err, isFull, preFull, datum, iWriteCnt, b.Leng(), b)
+		// b.Dump()
 	} else {
 		So(b.size, ShouldBeGreaterThan, 0)
 	}

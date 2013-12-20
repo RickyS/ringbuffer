@@ -101,7 +101,7 @@ func (b *RingBuffer) next(subscript int) int {
 // Write inserts an element into the ring buffer.
 func (b *RingBuffer) Write(datum RingElement) error {
 	if b.size >= cap(b.data) {
-		fmt.Printf("!Full b %p, size %d, cap %d\n", b, b.size, cap(b.data))
+		//fmt.Printf("!Full b %p, size %d, cap %d\n", b, b.size, cap(b.data))
 		return &RingBufferError{"RingBuffer is full"}
 	}
 

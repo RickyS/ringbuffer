@@ -14,10 +14,10 @@ var (
 // Simplified version of "TestInterleaved", which was too complex to debug.
 func TestRand(t *testing.T) {
 	fmt.Println("———————→ TestRand ←———————")
-	// const bufferSize = 450
-	// const maxLoops = 6174 // why not use the "Mysterious Number of Keprekar"?
-	const bufferSize = 6
-	const maxLoops = 10
+	const bufferSize = 450
+	const maxLoops = 6174 // why not use the "Mysterious Number of Keprekar"?
+	// const bufferSize = 6
+	// const maxLoops = 10
 	phaseCnt = 0
 	Convey("TestRand", t, func() {
 		So(maxLoops, ShouldBeGreaterThan, bufferSize)
@@ -36,7 +36,7 @@ func TestRand(t *testing.T) {
 		So(b.HasAny(), ShouldBeFalse)
 		So(b.Full(), ShouldBeFalse)
 		//dumpData(b)
-		b.Dump()
+		//b.Dump()
 		zeroCnt = 0
 		for i := 0; i < maxLoops; i++ {
 			x = r.Intn(0x601)
@@ -75,9 +75,9 @@ func TestRand(t *testing.T) {
 				So(b.size, ShouldEqual, b.Leng())
 				if nil == erra {
 					So(b.Leng(), ShouldBeGreaterThan, 0)
-					fmt.Printf("\t!! b.size %2d, wValue %2d\n", b.size, wValue)
+					//fmt.Printf("\t!! b.size %2d, wValue %2d\n", b.size, wValue)
 				} else {
-					fmt.Printf("WriteVer yields %v, wValue %d\n", erra, wValue)
+					//fmt.Printf("WriteVer yields %v, wValue %d\n", erra, wValue)
 				}
 				xW++
 				//})
@@ -96,7 +96,7 @@ func dumpData(b *RingBuffer) {
 		interveneCnt, doiReadCnt, xR, xW, dR1, dW1, phaseCnt)
 	fmt.Printf("makR %4d, makW %4d, changeCnt %4d, fR %4d, b %08p, hasCnt %d, zeroCnt %d\n",
 		makR, makW, changeCnt, fR, b, hasCnt, zeroCnt)
-	b.Dump()
+	//b.Dump()
 	fmt.Printf("——\n")
 
 }
