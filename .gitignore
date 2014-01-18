@@ -3,3 +3,5 @@ testing.txt
 cover.txt
 *.went
 /.project
+cloudforge.sh
+ringbuffer/
