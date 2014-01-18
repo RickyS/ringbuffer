@@ -8,10 +8,11 @@ To install:
 A ring buffer is an array where stuff is put into one end and removed from the other.  Also known as a queue.
 The data is represented as an array of interface elements.
 
-To Use:  
-         type myThing ringbuffer.RingElement  // Create your element type as you need.  
+         To Use:  
+         - - - -  
+         type myThing ringbuffer.RingElement  // Create your element type as you need.   
 
-         var whatever == myThing("whatever") // Assuming a conversion from string.  Not needed.  
+         var whatever == myThing("whatever") // Assuming a conversion from string.  Not needed.   
 
          rb := RingBuffer.New(40)           // Create the fixed-size ringbuffer.  
          rb.Write(myThing) // Et cetera     // Insert the first element.  
