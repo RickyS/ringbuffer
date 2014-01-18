@@ -5,3 +5,4 @@ cover.txt
 /.project
 cloudforge.sh
 ringbuffer/
+.Backup/
